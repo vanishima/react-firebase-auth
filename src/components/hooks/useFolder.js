@@ -7,11 +7,12 @@ const ACTIONS = {
   SELECT_FOLDER: "SELECT_FOLDER",
   UPDATE_FOLDER: "UPDATE_FOLDER",
   SET_CHILD_FOLDERS: "SET_CHILD_FOLDERS",
+  SET_CHILD_FILES: "SET_CHILD_FILES",
 };
 
 // path = things before this folder, since it is root,
 // there is nothing before the root
-const ROOT_FOLDER = { name: "Root", id: null, path: [] };
+export const ROOT_FOLDER = { name: "Root", id: null, path: [] };
 
 const reducer = (state, { type, payload }) => {
   switch (type) {
@@ -26,6 +27,8 @@ const reducer = (state, { type, payload }) => {
       return { ...state, folder: payload.folder };
     case ACTIONS.SET_CHILD_FOLDERS:
       return { ...state, childFolders: payload.childFolders };
+    case ACTIONS.SET_CHILD_FILES:
+      return { ...state, childFiles: payload.childFiles };
     default:
       return state;
   }
@@ -77,21 +80,29 @@ export const useFolder = (folderId = null, folder = null) => {
 
   useEffect(() => {
     const fetchChildDoc = async () => {
-      const q = db.getChildFolderQuery(db.folders, folderId, currentUser);
-      console.log("query", q);
+      const q = db.getChildFoldersQuery(db.folders, folderId, currentUser);
       return onSnapshot(q, querySnapshot => {
-        console.log("querySnapshot", querySnapshot);
         dispatch({
           type: ACTIONS.SET_CHILD_FOLDERS,
           payload: { childFolders: querySnapshot.docs.map(db.formatDocSnap) },
         });
-        // const childFolders = [];
-        // querySnapshot.forEach(doc => {
-        //   childFolders.push(doc.data().name);
-        // });
       });
     };
     const cleanup = fetchChildDoc();
+    return cleanup;
+  }, [folderId, currentUser]);
+
+  useEffect(() => {
+    const fetchChildFiles = async () => {
+      const q = db.getChildFilesQuery(db.files, folderId, currentUser);
+      return onSnapshot(q, querySnapshot => {
+        dispatch({
+          type: ACTIONS.SET_CHILD_FILES,
+          payload: { childFiles: querySnapshot.docs.map(db.formatDocSnap) },
+        });
+      });
+    };
+    const cleanup = fetchChildFiles();
     return cleanup;
   }, [folderId, currentUser]);
 

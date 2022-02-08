@@ -5,6 +5,7 @@ import { faFolderPlus } from "@fortawesome/free-solid-svg-icons";
 import { db } from "firebase.js";
 import { addDoc } from "firebase/firestore";
 import { useAuth } from "contexts/AuthContext";
+import { ROOT_FOLDER } from "components/hooks/useFolder";
 
 const AddFolderButton = ({ currentFolder }) => {
   const [open, setOpen] = useState(false);
@@ -25,12 +26,20 @@ const AddFolderButton = ({ currentFolder }) => {
     // we need to be inside a folder to create a folder
     if (currentUser == null) return;
 
+    const path = [...currentFolder.path];
+    if (currentFolder !== ROOT_FOLDER) {
+      path.push({
+        name: currentFolder.name,
+        id: currentFolder.id,
+      });
+    }
+
     // Create a folder in the databse
     await addDoc(db.folders, {
       name: name,
       parentId: currentFolder.id,
       userId: currentUser.uid,
-      //   path,
+      path: path,
       createdAt: db.getCurrentTimestamp(),
     });
 
